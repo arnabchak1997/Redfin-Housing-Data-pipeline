@@ -1,0 +1,73 @@
+CREATE DATABASE redfin_database_1;
+CREATE SCHEMA redfin_schema;
+drop TABLE redfin_database_1.redfin_schema.redfin_table;
+
+CREATE OR REPLACE TABLE redfin_database_1.redfin_schema.redfin_table (
+period_duration INT,
+city STRING,
+state STRING,
+property_type STRING,
+median_sale_price FLOAT,
+median_ppsf FLOAT,
+homes_sold FLOAT,
+inventory FLOAT,
+months_of_supply FLOAT,
+median_dom FLOAT,
+sold_above_list FLOAT,
+period_end_in_years STRING,
+period_end_in_months STRING
+);
+
+CREATE SCHEMA file_format_schema;
+
+CREATE OR REPLACE file format redfin_database_1.file_format_schema.format_parquet
+    TYPE='Parquet'
+    COMPRESSION= SNAPPY
+    REPLACE_INVALID_CHARACTERS = TRUE;
+
+CREATE SCHEMA external_stage_schema;
+
+CREATE or replace STORAGE INTEGRATION S3_INTEGRATION
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = S3
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::515678466614:role/Snowflake_access_role'
+  ENABLED = TRUE
+  STORAGE_ALLOWED_LOCATIONS = ('s3://redfin-data-project-ap-southeast-1-515678466614/transform-data-zone/redfin_data.parquet/');
+
+DESC INTEGRATION S3_INTEGRATION;
+
+CREATE OR REPLACE STAGE redfin_database_1.external_stage_schema.redfin_ext_stage
+  URL='s3://redfin-data-project-ap-southeast-1-515678466614/transform-data-zone/redfin_data.parquet/'
+  STORAGE_INTEGRATION = S3_INTEGRATION
+  FILE_FORMAT=redfin_database_1.file_format_schema.FORMAT_PARQUET;
+
+list @redfin_database_1.external_stage_schema.redfin_ext_stage;
+
+CREATE OR REPLACE SCHEMA redfin_database_1.snowpipe_schema;
+
+CREATE OR REPLACE PIPE redfin_database_1.snowpipe_schema.redfin_snowpipe
+auto_ingest = TRUE
+AS
+COPY INTO redfin_database_1.redfin_schema.redfin_table
+FROM ( select
+$1:period_duration::INT,
+$1:city::STRING,
+$1:state::STRING,
+$1:property_type::STRING,
+$1:median_sale_price::FLOAT,
+$1:median_ppsf::FLOAT,
+$1:homes_sold::FLOAT,
+$1:inventory::FLOAT,
+$1:months_of_supply::FLOAT,
+$1:median_dom::FLOAT,
+$1:sold_above_list::FLOAT,
+$1:period_end_yr::STRING,
+$1:period_end_month::STRING
+from @redfin_database_1.external_stage_schema.redfin_ext_stage
+);
+
+DESC PIPE redfin_database_1.snowpipe_schema.redfin_snowpipe;
+
+select * from redfin_database_1.redfin_schema.redfin_table limit 20;
+
+select count (*) from redfin_database_1.redfin_schema.redfin_table;
