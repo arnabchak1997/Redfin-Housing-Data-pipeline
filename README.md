@@ -1,7 +1,7 @@
 # Redfin-Housing-Data-pipeline
 
 ## Summary: <br>
-In this project, we will be creating an ETL pipeline for analysing Housing market data and use that to draw visualizations. The dataset will be loaded to S3 from where we will run some transformations on it using Pyspark thorugh an EMR cluster, we will load that transformed data to Snowflake using snowpipe and use it draw insisghts and create visualization using Quicksight.
+In this project, we will be creating an ETL pipeline for analysing Housing market data and use that to draw visualizations. The dataset will be loaded to S3 from where we will run some transformations on it using Pyspark through an EMR cluster, we will load that transformed data to Snowflake using snowpipe and use it draw insisghts and create visualization using Quicksight.
 
 
 ## Dataset Description: <br>
